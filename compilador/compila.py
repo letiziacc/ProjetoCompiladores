@@ -68,7 +68,7 @@ if s and p:
     g = GeradorCodigoObjeto(tokens_lexema, semant.tabelaSimbolos)
     retorno = g.gerar()
     cod = retorno
-    with open('asm.txt', 'w') as arquivo:
+    with open('compilador/asm.txt', 'w') as arquivo:
         for num, instrucao in enumerate(cod):
             arquivo.write(instrucao+'\n')   
             print(num, instrucao)  
