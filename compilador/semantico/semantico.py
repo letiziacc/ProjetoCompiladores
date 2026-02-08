@@ -1,11 +1,10 @@
 class Semantico:
 	def __init__(self,tokens_lexemas):
-		# [[token lexema], [token, lexema]]
-	    # VAR, $cont
-		self.tabelaSimbolos = {}
-		self.codigo 		= tokens_lexemas
-		self.i      		= -1
-		self.startTabelaSimbolos()
+		
+		self.tabelaSimbolos = {} # Tabela de símbolos (armazena variáveis e funções)
+		self.codigo 		= tokens_lexemas # Lista de tokens e lexemas (vinda do léxico)
+		self.i      		= -1 # Ponteiro para percorrer o código
+		self.startTabelaSimbolos() # Inicia o mapeamento das variáveis
 
 	# $a = $b
 	# func c(){ 
@@ -27,6 +26,7 @@ class Semantico:
 	"""	
 
 	def avanca(self):
+		# Avança para o próximo token
 		token, lexe = self.pega()
 		self.i = self.i + 1
 		if self.i < len(self.codigo)-1:
@@ -36,6 +36,7 @@ class Semantico:
 	
 
 	def volta(self):
+		# Volta/retrocede um token
 		token, lexe = self.pega()
 		self.i = self.i - 1
 		if self.i >= 0:
@@ -45,16 +46,18 @@ class Semantico:
 		
 		
 	def pega(self):
+		# Pega o token atual
 		return self.codigo[self.i][0], self.codigo[self.i][1] 
 
 	def exibe(self):
+		# Exibe a tabela de símbolos
 		for k, v in self.tabelaSimbolos.items():
 			print(k, v)
 
 	def startTabelaSimbolos(self):
+		# Criação da tabela
 		escopos = ['GLOBAL']
 
-		# pilhas auxiliares para verificar se estamos em um escopo ou se estamos dentro de uma expr de uma estrutura como if
 		abriu_chaves = []
 		instrucao_parenteses = []
 		
@@ -86,18 +89,18 @@ class Semantico:
 			else:
 				escopoAtual = escopos[len(escopos)-1]
 
-			# mapeando somente todas variaveis globais e verificando se não estamos dentro de um parenteses de um if ou while, ai pega
+			# Adiciona as variáveis globais
 			if (token == 'var' or (token == 'ident' and lexema not in ['floatval', 'readline'])) and (lexema, escopoAtual) not in self.tabelaSimbolos and escopoAtual == 'GLOBAL' and not len(instrucao_parenteses):
 				self.tabelaSimbolos[(lexema, escopoAtual)] = {
 					"tipo": token,
 					"end_rel": posicao if token != 'ident' else -1,
 					"end_proc": -1,
-					"inicializado": False # ainda nao sabemos nessa parte do codigo
+					"inicializado": False 
 				}
 				if token != 'ident':
 					posicao = posicao + 1
 
-		# agora pegar somente as variaveis dos escopos locais
+		# Pega as variáveis dos escopos locais
 		ultimaPosicaoGlobal = posicao
 		abriu_chaves = []
 		instrucao_parenteses = []
@@ -130,13 +133,13 @@ class Semantico:
 
 			escopoAtual = escopos[len(escopos)-1]
 
-			# mapeando agora todas variaveis locais e verificando se não estamos dentro de um parenteses de um if ou while, ai pega
+			# Adiciona as variáveis locais
 			if token == 'var' and (lexema, escopoAtual) not in self.tabelaSimbolos and escopoAtual != 'GLOBAL' and not len(instrucao_parenteses):
 				self.tabelaSimbolos[(lexema, escopoAtual)] = {
 					"tipo": "var",
 					"end_rel": posicao,
 					"end_proc": -1,
-					"inicializado": False # ainda nao sabemos nessa parte do codigo
+					"inicializado": False 
 				}
 
 				posicao = posicao + 1
@@ -144,7 +147,7 @@ class Semantico:
 
 	def mapeiaEscopoVariavel(self, escopos):
 		token, lexe = self.pega()
-		# se acharmos o escopo local da variavel, ela pertence a ele, senao, provavelmente ao global
+		
 		if (token == 'var' and (lexe, escopos[-1]) in self.tabelaSimbolos):
 			return escopos[-1]
 		else:
@@ -153,7 +156,7 @@ class Semantico:
 
 	def verificaAtribuicao(self, escopos):
 		token, lexe = self.avanca()
-		# verificando toda a atribuicao e com isso verifica se existe alguma variavel não declarada ou se divide por 0
+		# Verifica toda a atribuição e com isso verifica se existe alguma variavel não declarada ou se divide por 0
 		while lexe != ';':
 			if token == 'var':
 				escopo = self.mapeiaEscopoVariavel(escopos)
@@ -174,9 +177,9 @@ class Semantico:
 
 	def regrasSemanticas(self):
 		"""
-			1 verificar se uma variavel que está sendo utilizada foi inicializada 
-			2 verificar se uma variavel não está sendo dividido por zero
-			3 verificar se uma variavel está dentro do escopo
+			1 verificar se uma variável que está sendo utilizada foi inicializada 
+			2 verificar se uma variável não está sendo dividida por zero
+			3 verificar se uma variável está dentro de algum escopo
 		"""
 		escopos = ['GLOBAL']
 		abriu_chaves = []
@@ -186,8 +189,8 @@ class Semantico:
 		while self.i < len(self.codigo):
 			token, lexem = self.avanca()
 
-			# seção de pilhas: 
-			# "escopos" e "abriu chaves", trabalham juntos
+			# Seção de pilhas: 
+			
 			if token == 'function':
 				token, lexem = self.avanca()
 				escopos.append(lexem)
@@ -200,7 +203,7 @@ class Semantico:
 				if len(abriu_chaves) > 0:
 					abriu_chaves.pop()
 
-			# dentro de parenteses em uma instrucao é outra pilha auxilicar a verificação se uma variavel está dentro de um if, while
+			
 			elif token in ['if', 'while']:
 				dentro_parenteses_instrucao.append(token)
 
@@ -223,13 +226,10 @@ class Semantico:
 				elif token_avanc == 'ponto_virgula':
 					self.tabelaSimbolos[(lexem, escopo)]['inicializado'] = False
 
-				# caso seja variaveis por parametro, assumir que vão vir com valores
 				elif len(dentro_parenteses_funcao):
 					self.tabelaSimbolos[(lexem, escopo)]['inicializado'] = True
-					# quando for final de ) de uma funcao, voltar 1 posicao pois depois ali em cima, ele andaria novamente, e precisamos remover esse parenteses antes
 					self.volta()
 			
-				# se estiver dentro de parenteses, entao verificar se a var foi inicializada
 				elif len(dentro_parenteses_instrucao) and not self.tabelaSimbolos[(lexem, escopo)]['inicializado']:
 					print(f'ERRO SEMÂNTICO: variável {lexem} dentro de instrução {dentro_parenteses_instrucao[-1]} não iniciada')
 					return False

@@ -1,8 +1,9 @@
 import ply.lex as lex
+# Importa o módulo léxico da biblioteca PLY
 
 
 class Lexico:
-    # Palavras reservadas
+    # Dicionário de palavras reservadas
     def __init__(self):
         self.reserved = {
 
@@ -26,7 +27,7 @@ class Lexico:
             'mais', 'menos', 'vezes', 'divide',
             'numero', 'ident', 'var',
             
-            
+        # Adiciona os tokens das palavras reservadas em uma lista    
         ] + list(self.reserved.values())
 
         # Definição dos tokens
@@ -82,11 +83,11 @@ class Lexico:
         t.lexer.lineno += len(t.value)
 
     # Controle de  erros
-
     def t_error(self, t):
         print(f"Caracter ilegal '{t.value[0]}' na linha {t.lineno}")
         t.lexer.skip(1)
 
+    # Construção do lexer
     def constroi(self):
         self.lexer = lex.lex(module=self)
         return self.lexer
