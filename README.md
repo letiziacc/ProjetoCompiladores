@@ -28,7 +28,7 @@ ProjetoCompiladores/
 ## Pré-requisitos
 
 - Python **3.6 ou superior**
-- Biblioteca **PLY** (Python Lex-Yacc)
+- Biblioteca **PLY** (Python Lex-Yacc) - https://www.dabeaz.com/ply/ply.html
 
 Instalação do PLY:
 
